@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
 import { Listbox } from '@headlessui/react'
 import Select from 'react-select'
-
+import 'react-tooltip/dist/react-tooltip.css';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import * as Slider from '@radix-ui/react-slider';
+import axios from 'axios';
+import AppContext from '../../context/AppContext';
 const people = [
   { id: 1, name: 'Price (Asc)', unavailable: false },
   { id: 2, name: 'Price (Desc)', unavailable: false },
@@ -9,57 +13,322 @@ const people = [
   { id: 4, name: 'Domain Authority (Desc)', unavailable: false },
 ]
 
-const langOptions = [
-  { value: 'Mexico', label: 'Mexico' },
-  { value: 'United States', label: 'United States' },
-  { value: 'New Mexico', label: 'New Mexico' }
-]
-
-const SelectGenres = [
-  { id: 1, name: 'News', unavailable: false },
-  { id: 2, name: 'Fashion', unavailable: false },
-  { id: 3, name: 'Luxury', unavailable: false },
-  { id: 4, name: 'Lifestyle', unavailable: false },
-  { id: 5, name: 'Entertainment', unavailable: false },
-  { id: 6, name: 'Real Estate', unavailable: false },
-  { id: 7, name: 'Business', unavailable: false },
-  { id: 8, name: 'Tech', unavailable: false },
-  { id: 9, name: 'Web 3', unavailable: false },
-  { id: 10, name: 'Music', unavailable: false },
-  { id: 11, name: 'Sports', unavailable: false },
-  { id: 12, name: 'Gaming', unavailable: false },
-  { id: 13, name: 'Alcohol', unavailable: false },
-  { id: 14, name: 'Political', unavailable: false },
-  { id: 15, name: 'CBD', unavailable: false },
-  { id: 16, name: 'Legal', unavailable: false },
-]
-
-const SelectType = [
-  { id: 1, name: 'Pitch', unavailable: false },
-  { id: 2, name: 'New', unavailable: false },
-  { id: 3, name: 'Exclusive', unavailable: false },
-  { id: 4, name: 'Contributor', unavailable: false },
-  { id: 5, name: 'Press Release', unavailable: false },
-  { id: 6, name: 'Staff', unavailable: false },
-  { id: 7, name: 'Exclusive Rate', unavailable: false },
-  { id: 8, name: '1 Year Lifespan', unavailable: false },
-  { id: 9, name: 'Lowered', unavailable: false },
-  { id: 10, name: 'Includes Social Posts', unavailable: false },
-  { id: 11, name: '400K Impressions', unavailable: false },
-]
-
 export const AllPublications = () => {
 
+
   const [relative, setRelative] = useState(people[0]);
-  const [showImage, setShowImage] = useState(false);
+  const [publications, setPublications] = useState([]);
+  const [filteredPub, setFilteredPub] = useState([]);
+  const [SelectGenres, setSelectGenres] = useState([]);
+  const [SelectedRegions, setSelectedRegions] = useState([]);
+  const [langOptions, setlangOptions] = useState([]);
+  const [SelectType, setSelectType] = useState([]);
+  const [priceRange, setPrice] = useState([0,20000]); 
 
-  const handleMouseEnter = () => {
-    setShowImage(true);
-  };
+  const [SelectedType, setSelectedType] = useState([]);
+  const [SelectedGenres, setSelectedGenres] = useState([]);
 
-  const handleMouseLeave = () => {
-    setShowImage(false);
-  };
+  const [SelectedSponser, setSelectedSponser] = useState([]);
+  const [SelectedDofollow, setSelectedDofollow] = useState([]);
+  const [SelectedIndex, setSelectedIndex] = useState([]);
+  const [SelectedImage, setSelectedImage] = useState([]);
+  const [searchQuery, setsearchQuery] = useState('');
+   
+  
+  const myContext = React.useContext(AppContext);
+  const { datas, dispatch } = myContext;
+
+
+
+
+  const filterMe = () => {
+    // search first 
+    let obj = Object(publications);
+    obj= obj.filter(o => {
+      let q= (o.name).toLowerCase();
+ 
+      if(q.includes(searchQuery.toLowerCase())){
+        return true;
+      }
+      return false;
+    });
+
+    // range price 
+    
+    obj =  (obj).filter(o => {
+      if(o.price >= priceRange[0] && o.price <= priceRange[1]){
+       return true;
+      }
+   });
+
+
+    // regions 
+    if(SelectedRegions.length > 0){
+      obj =  (obj).filter(o => {
+        if(o.regions == null){ return false;}
+        let regions = o.regions;
+        for (let j = 0; j < regions.length; j++) {
+          const elementPub = regions[j];
+  
+          for (let i = 0; i < SelectedRegions.length; i++) {
+            const element = SelectedRegions[i];
+            if(elementPub.slug == element.slug) {
+              return true;
+            }
+            
+          } 
+        }
+     });
+    }
+
+
+    
+
+
+     
+    // genres filtyer
+    if(SelectedGenres.length > 0){
+      obj = Object(obj).filter(o => {
+        if(o.genres == null){ return false;}
+        let genres = o.genres;
+        
+        for (let j = 0; j < genres.length; j++) {
+          const elementPub = genres[j];
+  
+          for (let i = 0; i < SelectedGenres.length; i++) {
+            const element = SelectedGenres[i];
+            if(elementPub.slug == element) {
+              return true;
+            }
+            
+          } 
+        }
+     });
+    }
+    
+      // type / badge filtyer 
+      if(SelectedType.length > 0){
+        obj = Object(obj).filter(o => {
+          if(o.badges == null){ return false;}
+
+          let badges = o.badges;
+          for (let j = 0; j < badges.length; j++) {
+            const elementPub = badges[j];
+    
+            for (let i = 0; i < SelectedType.length; i++) {
+              const element = SelectedType[i];
+              if(elementPub.name == element) {
+                return true;
+              }
+              
+            } 
+          }
+       });
+      }
+
+      // sponser filtyer 
+      if(SelectedSponser.length > 0){
+        obj = Object(obj).filter(o => {
+          if(o.sponsored == null){ return false;}
+ 
+          for (let i = 0; i < SelectedSponser.length; i++) {
+            const element = SelectedSponser[i];
+            if((o.sponsored) == element) {
+              return true;
+            }
+          } 
+         
+       });
+      }
+      // dofollow filtyer 
+      if(SelectedDofollow.length > 0){
+        obj = Object(obj).filter(o => {
+          if(o.do_follow == null){ return false;}
+ 
+          for (let i = 0; i < SelectedDofollow.length; i++) {
+            const element = SelectedDofollow[i];
+            if((o.do_follow) == element) {
+              return true;
+            }
+          } 
+         
+       });
+      }
+
+      //filter is indexs
+      if(SelectedIndex.length > 0){
+        obj = Object(obj).filter(o => {
+          if(o.indexed == null){ return false;}
+ 
+          for (let i = 0; i < SelectedIndex.length; i++) {
+            const element = SelectedIndex[i];
+            if((o.indexed) == element) {
+              return true;
+            }
+          } 
+         
+       });
+      }
+
+       //filter image 
+       if(SelectedImage.length > 0){
+        obj = Object(obj).filter(o => {
+          if(o.image == null){ return false;}
+ 
+          for (let i = 0; i < SelectedImage.length; i++) {
+            const element = SelectedImage[i];
+            if((o.image) == element) {
+              return true;
+            }
+          } 
+         
+       });
+      }
+
+   
+
+if(relative.id != null){
+     obj.sort(function(a, b) {
+      if(relative.id== 1){
+        return parseFloat(a.price) - parseFloat(b.price);
+      }
+      if(relative.id== 2){
+        return parseFloat(b.price) - parseFloat(a.price);
+      }
+      if(relative.id== 3){
+        return parseFloat(a.domain_authority) - parseFloat(b.domain_authority);
+      }
+      if(relative.id== 4){
+        return parseFloat(b.domain_authority) - parseFloat(a.domain_authority);
+      }
+
+  });
+} 
+ 
+   
+
+    setFilteredPub(obj);
+}
+  React.useEffect( () => {
+    filterMe();
+    return () => {
+      
+    }
+  }, [publications, searchQuery,relative,priceRange ,SelectedRegions,SelectedGenres , SelectedType ,SelectedSponser, SelectedDofollow, SelectedIndex, SelectedImage,searchQuery ]);
+
+  const resetFilter =() =>{
+    setSelectedType([]);
+    setSelectedGenres([]);
+    setSelectedSponser([]);
+    setSelectedDofollow([]);
+    setSelectedIndex([]);
+    setSelectedImage([]);
+    setsearchQuery('');
+    setRelative(people[0]);
+    setPrice([0,20000]);
+  }
+ 
+  React.useEffect(() => { 
+
+    let allgens= [];
+    let allRegions= [];
+    let allbadges= [];
+    for(let i=0; i < publications.length;i++){
+      let pub= publications[i];
+      if((pub.badges) !== null ){
+        for(let j=0; j< (pub.badges).length; j++){
+          let nGen= (pub.badges)[j];
+          nGen = {...nGen, isActive: false};
+
+          let isExists = false;
+          allbadges.forEach(e =>{
+            if(e.name == nGen.name){
+              isExists = true;
+            }
+          });
+          if(!isExists){
+            allbadges.push(nGen);
+          }
+        }
+      }
+      
+
+      setSelectType(allbadges);
+
+      for(let j=0; j< (pub.genres).length; j++){
+        let nGen= (pub.genres)[j];
+        nGen = {...nGen, isActive: false};
+        let isExists = false;
+        allgens.forEach(e =>{
+          if(e.slug == nGen.slug){
+            isExists = true;
+          }
+        });
+        if(!isExists){
+          allgens.push(nGen);
+        }
+      }
+
+
+      for(let j=0; j< (pub.regions).length; j++){
+        let nGen= (pub.regions)[j];
+        nGen = {...nGen, label: nGen.name, value: nGen.slug, isActive: false};
+        let isExists = false;
+        allRegions.forEach(e =>{
+          if(e.slug == nGen.slug){
+            isExists = true;
+          }
+        });
+        if(!isExists){
+          allRegions.push(nGen);
+        }
+
+      }
+
+    }
+    setSelectGenres(allgens);
+    setlangOptions(allRegions);  
+    return () => {
+      
+    }
+  }, [publications]);
+
+  React.useEffect(() => {
+    console.log(datas);
+    let isLog= localStorage.getItem('isLogged');
+    let hash= localStorage.getItem('hash');
+    if(isLog == null && hash == null){
+      return;
+    }
+
+    let config = {
+      headers:{
+        "token":hash,
+      }}; 
+    axios.get(BASE_URL+ '/api/datas', config).then(({data})=> {
+       if(data.status){
+        
+        dispatch({ type: "set_data", data:  data});
+
+        setPublications(data.publications);
+        setSelectType(SelectType);
+       }
+    }).catch(e =>{
+        
+        setTimeout( () =>{
+            document.location.reload();
+        } , 2000);
+  
+        
+    });
+
+    
+    return () => {
+      
+    }
+  }, []);
+
+
   return (
     <>
       <div>
@@ -72,7 +341,15 @@ export const AllPublications = () => {
 
                   <div className='space-y-1'>
                     <p className='text-sm'>Publication name</p>
-                    <input placeholder='Search publication name' type="text" className='text-sm w-full p-2 placeholder:text-gray-400 placeholder:font-base border-2 bg-white' />
+                    <input value={searchQuery}
+                    onChange={(e) => {
+                      // console.log(e)
+                      setsearchQuery(e.target.value);
+                    }}
+                    placeholder='Search publication name'
+                     type="text" 
+                     className='text-sm w-full p-2 placeholder:text-gray-400 placeholder:font-base border-2 bg-white' 
+                     />
                   </div>
 
                   <div className='space-y-1'>
@@ -98,20 +375,27 @@ export const AllPublications = () => {
 
                   <div className="space-y-1">
                     <p className="text-sm">Price range</p>
-                    <span dir="ltr" data-orientation="horizontal" aria-disabled="false" className="taimbro relative flex items-center select-none touch-none h-5">
-                      <span data-orientation="horizontal" className="bg-black/10 relative grow rounded-full h-2">
-                        <span data-orientation="horizontal" className="absolute bg-primary/50 rounded-full h-full" style={{ left: '34.25%', right: '0%' }}></span>
-                      </span>
-                      <span style={{ transform: 'var(--radix-slider-thumb-transform)', position: 'absolute', left: 'calc(34.25% + 3.15px)' }}>
-                        <span role="slider" aria-valuemin="0" aria-valuemax="20000" aria-orientation="horizontal" data-orientation="horizontal" tabIndex="0" className="block w-5 h-5 cursor-grabbing bg-primary focus:outline focus:outline-offset-2 focus:outline-gray-500 rounded-sm" data-radix-collection-item="" aria-label="Minimum" aria-valuenow="6850"></span>
-                      </span>
-                      <span style={{ transform: 'var(--radix-slider-thumb-transform)', position: 'absolute', left: 'calc(100% + -10px)' }}>
-                        <span role="slider" aria-valuemin="0" aria-valuemax="20000" aria-orientation="horizontal" data-orientation="horizontal" tabIndex="0" className="block w-5 h-5 cursor-grabbing bg-primary focus:outline focus:outline-offset-2 focus:outline-gray-500 rounded-sm" aria-label="Maximum" aria-valuenow="20000"></span>
-                      </span>
-                    </span>
+                    <Slider.Root 
+                    onValueChange={setPrice}
+                    className="taimbro relative flex items-center select-none touch-none h-5" 
+                    defaultValue={[0, 20000]}
+                    min={0}
+                    max={20000}
+                    data-orientation="horizontal" >
+    <Slider.Track className="bg-black/10 relative grow rounded-full h-2">
+      <Slider.Range className="absolute bg-primary/50 rounded-full h-full" style={{
+        background: "#ef3e36"
+      }}/>
+    </Slider.Track>
+    <Slider.Thumb className="block w-5 h-5 cursor-grabbing bg-primary focus:outline focus:outline-offset-2 focus:outline-gray-500 rounded-sm"/>
+    <Slider.Thumb  className="block w-5 h-5 cursor-grabbing bg-primary focus:outline focus:outline-offset-2 focus:outline-gray-500 rounded-sm"/>
+  </Slider.Root>
+
+
+                
                     <div className="flex justify-between text-gray-500">
-                      <span className="text-sm">$6,850</span>
-                      <span className="text-sm">$20,000</span>
+                      <span className="text-sm">${priceRange[0]}</span>
+                      <span className="text-sm">${priceRange[1]}</span>
                     </div>
                   </div>
 
@@ -123,6 +407,8 @@ export const AllPublications = () => {
                           state.isFocused ? 'border-blue-600' : 'border-grey-300',
                       }}
                       placeholder='Select regions'
+                      onChange={setSelectedRegions}
+
                       options={langOptions}
                       isMulti
                       theme={(theme) => ({
@@ -139,49 +425,183 @@ export const AllPublications = () => {
                   <div className='space-y-1'>
                     <p className="text-sm">Select genres</p>
                     {SelectGenres.map((genres) => (
-                      <button key={genres.id} className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>{genres.name}</button>
+                      <button key={genres.slug} onClick={() =>{
+                        if(!SelectedGenres.includes( genres.slug)){
+                          setSelectedGenres([...SelectedGenres, genres.slug]);
+                        }else{
+                          setSelectedGenres(SelectedGenres.filter(item => item !== genres.slug));
+                        }
+                      
+                      }} className={SelectedGenres.includes( genres.slug) ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}>{genres.name}</button>
                     ))}
                   </div>
 
                   <div className='space-y-1'>
                     <p className="text-sm">Type</p>
                     {SelectType.map((type) => (
-                      <button key={type.id} className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>{type.name}</button>
+                      <button 
+                      key={type.id}
+                      
+                      onClick={() =>{
+                        if(!SelectedType.includes( type.name)){
+                          setSelectedType([...SelectedType, type.name]);
+                        }
+                        else{
+                          setSelectedType(SelectedType.filter(item => item !==  type.name));
+                        }
+                      
+                      }}
+                      className={SelectedType.includes( type.name) ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}
+
+                       >{type.name}</button>
                     ))}
                   </div>
 
                   <div className='space-y-1'>
                     <p className="text-sm">Sponsored</p>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Yes</button>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>No</button>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Discrete</button>
+                    <button 
+                    onClick={() =>{
+                      let name= 'yes';
+                        if(!SelectedSponser.includes( name)){
+                          setSelectedSponser([...SelectedSponser, name]);
+                        }
+                        else{
+                          setSelectedSponser(SelectedSponser.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedSponser.includes( 'yes') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}
+
+>Yes</button>
+                    <button  onClick={() =>{
+                      let name= 'no';
+                        if(!SelectedSponser.includes( name)){
+                          setSelectedSponser([...SelectedSponser, name]);
+                        }
+                        else{
+                          setSelectedSponser(SelectedSponser.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedSponser.includes( 'no') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}
+
+ >No</button>
+                    <button onClick={() =>{
+                      let name= 'discrete';
+                        if(!SelectedSponser.includes( name)){
+                          setSelectedSponser([...SelectedSponser, name]);
+                        }
+                        else{
+                          setSelectedSponser(SelectedSponser.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedSponser.includes( 'discrete') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}
+ >Discrete</button>
                   </div>
 
                   <div className='space-y-1'>
                     <p className="text-sm">Do follow</p>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Yes</button>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>No</button>
+                    <button 
+                    onClick={() =>{
+                      let name= 'yes';
+                        if(!SelectedDofollow.includes( name)){
+                          setSelectedDofollow([...SelectedDofollow, name]);
+                        }
+                        else{
+                          setSelectedDofollow(SelectedDofollow.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedDofollow.includes( 'yes') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}
+ >Yes</button>
+                    <button 
+                      onClick={() =>{
+                        let name= 'no';
+                          if(!SelectedDofollow.includes( name)){
+                            setSelectedDofollow([...SelectedDofollow, name]);
+                          }
+                          else{
+                            setSelectedDofollow(SelectedDofollow.filter(item => item !==  name));
+                          }
+                        
+                        }}
+                        className={SelectedDofollow.includes( 'no') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}  
+                  >No</button>
                   </div>
 
                   <div className='space-y-1'>
                     <p className="text-sm">Indexed</p>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Yes</button>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Maybe</button>
+                    <button 
+                     onClick={() =>{
+                      let name= 'yes';
+                        if(!SelectedIndex.includes( name)){
+                          setSelectedIndex([...SelectedIndex, name]);
+                        }
+                        else{
+                          setSelectedIndex(SelectedIndex.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedIndex.includes( 'yes') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}  
+                
+                >Yes</button>
+                    <button 
+                      onClick={() =>{
+                        let name= 'maybe';
+                          if(!SelectedIndex.includes( name)){
+                            setSelectedIndex([...SelectedIndex, name]);
+                          }
+                          else{
+                            setSelectedIndex(SelectedIndex.filter(item => item !==  name));
+                          }
+                        
+                        }}
+                        className={SelectedIndex.includes( 'maybe') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}  
+                  
+                  >Maybe</button>
                   </div>
 
                   <div className='space-y-1'>
                     <p className="text-sm">Image</p>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Yes</button>
-                    <button className='text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'>Maybe</button>
+                    <button 
+                    onClick={() =>{
+                      let name= 'yes';
+                        if(!SelectedImage.includes( name)){
+                          setSelectedImage([...SelectedImage, name]);
+                        }
+                        else{
+                          setSelectedImage(SelectedImage.filter(item => item !==  name));
+                        }
+                      
+                      }}
+                      className={SelectedImage.includes( 'yes') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}  
+                
+                
+                >Yes</button>
+                    <button 
+                       onClick={() =>{
+                        let name= 'maybe';
+                          if(!SelectedImage.includes( name)){
+                            setSelectedImage([...SelectedImage, name]);
+                          }
+                          else{
+                            setSelectedImage(SelectedImage.filter(item => item !==  name));
+                          }
+                        
+                        }}
+                        className={SelectedImage.includes( 'maybe') ? 'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-primary' :'text-white text-sm cursor-pointer p-1 px-2 mr-1 bg-[#6e6e6e]'}  
+                  
+                  >Maybe</button>
                   </div>
 
-                  <button className='text-sm hover:underline'>Reset all filters</button>
+                  <button className='text-sm hover:underline' onClick={()=> {resetFilter();}}>Reset all filters</button>
 
                 </div>
               </aside>
 
               <section className='w-full mt-2'>
-                <p className='font-body text-sm mb-1'>Showing 635 of 635 publications</p>
+                <p className='font-body text-sm mb-1'>{filteredPub.length} of {publications.length} publications</p>
                 <div className='overflow-x-scroll lg:overflow-visible relative'>
                   <table className='w-full divide-y divide-gray-300 overflow-hidden lg:overflow-visible border bg-white'>
                     <thead className='text-xs text-gray-700 bg-white sticky -top-1 shadow-sm'>
@@ -201,48 +621,85 @@ export const AllPublications = () => {
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-gray-200'>
-                      <tr className='text-sm'>
+                       {Object(filteredPub).map((data, i) =>{
+
+                        return <>
+                        <tr className='text-sm'>
                         <td className="py-2 px-2">
                           <div className="flex items-center space-x-3">
                             <div className="inline-flex w-10 h-10">
-                              <img alt="Hood Critic image" loading="lazy" width="100" height="100" decoding="async" data-nimg="1" className="w-10 h-10 object-cover rounded-full" style={{ color: "transparent" }} src='https://pricing.ascendagency.com/_next/image?url=https%3A%2F%2Fcdn.sanity.io%2Fimages%2F8n90kyzz%2Fproduction%2F41830af6c3f7d1a481695521558d17005b8ff6a1-200x200.webp%3Fw%3D100%26h%3D100&w=128&q=75' />
+                              {data.logo !== null && data.logo !=='' && (<>
+                                <img alt="Hood Critic image" loading="lazy" width="100" height="100" decoding="async" data-nimg="1" 
+                                className="w-10 h-10 object-cover rounded-full" style={{ color: "transparent" }}
+                                src={data.logo }
+                                />
+                              </>)}
+                              
                             </div>
                             <div>
                               <div className="flex items-center">
-                                <a href="#" className="underline flex items-center group" rel="noopener noreferrer nofollow" target="_blank">LA Entertainment Weekly</a>
+                                <a href={data.url} className="underline flex items-center group" rel="noopener noreferrer nofollow"
+                                 target="_blank">{data.name}</a>
                               </div>
-                              <div className="text-gray-500 text-sm font-semibold tracking-wide"></div>
+                              <div className="text-gray-500 text-sm font-semibold tracking-wide">
+                              {data.badges != null && (data.badges).map(badge =>{
+                                
+                              return (<><span key={badge.name}  style={{
+                                background: badge['bg-color'],
+                                color: badge['text-color'],
+
+                              }} className="text-xs font-medium mr-1 px-2.5 py-0.5 rounded bg-gray-100 text-gray-800">{badge.name}</span></>);
+                            })}
+                              </div>
                             </div>
                           </div>
                         </td>
 
                         <td className="px-2 border-l border-r">
                           <div className="flex flex-col items-center space-y-1">
-                            <span id=":r1gs:-Music" className="text-xs font-medium mr-1 px-2.5 py-0.5 rounded bg-gray-100 text-gray-800">Music</span>
+                            {(data.genres).length <= 2 ? (<>
+                            {(data.genres).map(gen =>{
+                              return (<><span id={":r1gs:-"+gen.name} className="text-xs font-medium mr-1 px-2.5 py-0.5 rounded bg-gray-100 text-gray-800">{gen.name}</span></>);
+                            })}
+                            </>) : (<>
+                              <span className="mr-1 text-gray-500">{(data.genres).length} genres</span>
+                              </>) }
+                            
                           </div>
                         </td>
 
-                        <td className="text-center border-l border-r">$75</td>
-                        <td className="text-center border-l border-r">10</td>
-                        <td className="text-center border-l border-r">1-3 Days</td>
-                        <td className="text-center border-l border-r"><span> United States</span> <span> Utah</span></td>
-                        <td className="text-center border-l border-r">No</td>
-                        <td className="text-center border-l border-r">Yes</td>
+                        <td className="text-center border-l border-r">${data.price}</td>
+                        <td className="text-center border-l border-r">{data.domain_authority}</td>
+                        <td className="text-center border-l border-r">{data.estimated_time}</td>
                         <td className="text-center border-l border-r">
-                          <div className="flex items-center justify-center space-x-2">Yes</div>
-                        </td>
-                        <td className="text-center border-l border-r">Yes</td>
-                        <td className='text-center border-l border-r'>
-                          <a href="https://cdn.sanity.io/images/8n90kyzz/production/7381a5f736b1269f8cbd0cf634b2900bfd58e478-1467x3900.png">
-                            <button
-                              onMouseEnter={handleMouseEnter}
-                              onMouseLeave={handleMouseLeave}
-                              className="image-container inline-flex items-center justify-center"><svg data-sanity-icon="images" width="1em" height="1em" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" fontSize="20"><path d="M18.5 7.5H20.5V19.5H6.5V17.5M4.5 14.5L7.79289 11.2071C8.18342 10.8166 8.81658 10.8166 9.20711 11.2071L11.8867 13.8867C12.2386 14.2386 12.7957 14.2782 13.1938 13.9796L14.1192 13.2856C14.3601 13.1049 14.6696 13.0424 14.9618 13.1154L18.5 14M4.5 5.5H18.5V17.5H4.5V5.5ZM14.5 9.5C14.5 10.0523 14.0523 10.5 13.5 10.5C12.9477 10.5 12.5 10.0523 12.5 9.5C12.5 8.94772 12.9477 8.5 13.5 8.5C14.0523 8.5 14.5 8.94772 14.5 9.5Z" stroke="currentColor" strokeWidth="1.2"></path></svg>
-                            </button>
-                          </a>
+                        {(data.regions).map(reg =>{
+                              return (<><span >{reg.name} </span> </>);
+                            })} </td>
+                        <td className="text-center border-l border-r">{(data.sponsored)[0].toUpperCase()+(data.sponsored).slice(1)}</td>
+                        <td className="text-center border-l border-r">{(data.indexed)[0].toUpperCase()+(data.indexed).slice(1)}</td>
+                        <td className="text-center border-l border-r">
+                          <div className="flex items-center justify-center space-x-2">{(data.image)[0].toUpperCase()+(data.image).slice(1)}</div>
+                        </td> 
+                        <td className="text-center border-l border-r">{(data.do_follow)[0].toUpperCase()+(data.do_follow).slice(1)}</td>
+                        <td className='text-center border-l border-r'> 
+                        {data.articlePreview != null && data.articlePreview !='' && (<>
+                            <a id={'global'+data.slug} > View Image </a>
+                            <ReactTooltip anchorSelect={'#global'+data.slug} aria-haspopup='true'  clickable>
+                              <img style={{
+                                "max-height":'300px',
+                                "max-width":'250px', 
+                              }} src={data.articlePreview}/>
+                            </ReactTooltip>
+ 
+                          </>) }
+
+ 
                         </td>
 
                       </tr>
+                      </>;
+                       })}
+                      
                     </tbody>
                   </table>
                 </div>
