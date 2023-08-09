@@ -22,7 +22,7 @@ export const PRBundles = () => {
                     
                     return <>
                       <div className='bg-white p-1 font-body text-sm'>
-                        <h3 className='font-medium bg-red-600/[.2] text-primary p-1'>Bundle 1 — ${dat.price}</h3>
+                        <h3 className='font-medium bg-red-600/[.2] text-primary p-1'>{dat.title} — ${dat.price}</h3>
                         <h3 className='bg-gray-50 p-1'>Retail Value — ${dat.retail}</h3>
                         <ul className="list-decimal ml-6 mt-2 mb-2">
                           {(dat.entries).map(t =>{

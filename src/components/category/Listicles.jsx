@@ -50,14 +50,12 @@ export const Listicles = () => {
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Image</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Do follow</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2">
-                          <div className="flex justify-center">Example</div>
+                        <div className="flex justify-center buyth">Buy</div>
                         </th>
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-gray-200'>
-                       {Object(filteredPub).map((data, i) =>{
-                        console.log(data)
-
+                       {Object(filteredPub).map((data, i) =>{ 
                         return <>
                         <tr className='text-sm'>
                         <td className="py-2 px-2">
@@ -121,15 +119,8 @@ export const Listicles = () => {
                         
                         <td className="text-center border-l border-r">{(data.do_follow)[0].toUpperCase()+(data.do_follow).slice(1)}</td>
                         <td className='text-center border-l border-r'>
-                          {data.articlePreview != null && data.articlePreview !='' && (<>
-                            <a id={'global'+data.slug} > View Image </a>
-                            <ReactTooltip anchorSelect={'#global'+data.slug} aria-haspopup='true'  clickable>
-                              <img style={{
-                                "max-height":'300px',
-                                "max-width":'250px', 
-                              }} src={data.articlePreview}/>
-                            </ReactTooltip>
- 
+                        {data.buyUrl != null && data.buyUrl !='' && (<>
+                            <a href={data.buyUrl} target='_blank'  className='buyb'> Buy </a>
                           </>) }
       
                     

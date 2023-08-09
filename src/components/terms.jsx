@@ -17,8 +17,8 @@ export const TermsPage = () => {
         <div className='__variable_43de4e'>
           <HomeHeader />
           <main className='w-full p-2 lg:w-full lg:p-4 lg:mx-auto xl:p-0 xl:w-[1200px]'>
-            <section className="mt-2 mb-4 flex-col font-body space-y-3 flex lg:space-y-0 lg:items-center lg:flex-row justify-between">
-              <div className="flex flex-col">
+            <section className="mt-2 mb-4 font-body ">
+              <div className="">
                 <h1 className="text-2xl uppercase bold">Terms of Service</h1>
                 
               </div>
