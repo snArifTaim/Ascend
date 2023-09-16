@@ -27,6 +27,8 @@ function AppRouter() {
   ]);
 
   const checkLoginStatus = () =>{
+    // if(!isRout) {setIsRout(true);}
+    return;
     let isLog= localStorage.getItem('isLogged');
     let hash= localStorage.getItem('hash');
     if(isLog == null && hash == null){ 
@@ -59,20 +61,21 @@ function AppRouter() {
 
  const alldataGet = () => {
 
-    let isLog= localStorage.getItem('isLogged');
-    let hash= localStorage.getItem('hash');
-    if(isLog == null && hash == null){
-      return;
-    }
+    // let isLog= localStorage.getItem('isLogged');
+    // let hash= localStorage.getItem('hash');
+    // if(isLog == null && hash == null){
+    //   return;
+    // }
 
     let config = {
       headers:{
-        "token":hash,
+        // "token":hash,
       }}; 
-    axios.get(BASE_URL+ '/api/datas', config).then(({data})=> {
+    axios.get(BASE_URL+ '/apiu/datas', config).then(({data})=> {
        if(data.status){
         
         dispatch({ type: "set_data", data:  data});
+        setIsRout(true);
  
        }
     }).catch(e =>{    
@@ -83,6 +86,8 @@ function AppRouter() {
   } ;
 
   const checkLogin = () =>{
+    // setIsRout(true);
+    return;
     let isLog= localStorage.getItem('isLogged');
     let hash= localStorage.getItem('hash');
     if(isLog !== null && hash !== null){
@@ -99,6 +104,8 @@ function AppRouter() {
       if(data.status){
         dispatch({ type: "set_web", web: data });
         setIsReady(true);
+          
+
       }else{
         // document.location.reload();
       }
@@ -113,16 +120,16 @@ function AppRouter() {
     webStatus();
   };
 
+  const [isReady, setIsReady] = React.useState(false);
   React.useEffect(() => {
     // first initial load 
     getLoad();
-    checkLogin();
+    // checkLogin();
     alldataGet();
     return () => {
       
     }
   }, []);
-  const [isReady, setIsReady] = React.useState(false);
   
   const userSettings = {
     datas: stdatas,
@@ -172,12 +179,15 @@ function AppRouter() {
         
         <BrowserRouter>
             <Routes>
-            {isLogged() ? (<>
+              
+            <Route path="/" element={<HomePage />} />
+
+            {/* {isLogged() ? (<>
                 <Route path="/" element={<HomePage />} />
                 <Route exact path="/auth/select" element={<Select />} />
                 </> ) :( <>
                 <Route exact path="/" element={<LoginPage />} />
-                </>)}
+                </>)} */}
                 
                 <Route exact path="/tos" element={<TermsPage />} />
 

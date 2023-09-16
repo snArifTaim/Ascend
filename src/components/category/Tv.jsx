@@ -5,7 +5,15 @@ export const Tv = () => {
   const myContext = React.useContext(AppContext);
   const [searchQuery, setsearchQuery] = React.useState('');
   const { datas} = myContext;
-  const [publications, setPublications] = React.useState(datas.datas.tvs);
+
+  if(typeof(datas.datas?.tvs) != 'object' ){
+    return <></>;
+  }
+
+  
+  const datasx = typeof(datas.datas?.tvs) == 'object' ? datas.datas.tvs : [];
+
+  const [publications, setPublications] = React.useState(datasx);
   const [filteredPub, setFilteredPub] = React.useState(publications);
   const filterMe = () => {
     // search first 

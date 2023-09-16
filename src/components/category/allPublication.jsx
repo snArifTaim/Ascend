@@ -17,7 +17,6 @@ export const AllPublications = () => {
 
 
   const [relative, setRelative] = useState(people[0]);
-  const [publications, setPublications] = useState([]);
   const [filteredPub, setFilteredPub] = useState([]);
   const [SelectGenres, setSelectGenres] = useState([]);
   const [SelectedRegions, setSelectedRegions] = useState([]);
@@ -36,11 +35,12 @@ export const AllPublications = () => {
    
   
   const myContext = React.useContext(AppContext);
-  const { datas, dispatch } = myContext;
+  const { datas, dispatch } = myContext; 
+  const sData = typeof(datas.datas?.publications) == 'object' ? datas.datas.publications : [];
 
 
-
-
+  const [publications, setPublications] = useState(sData);
+ 
   const filterMe = () => {
     // search first 
     let obj = Object(publications);
@@ -294,37 +294,40 @@ if(relative.id != null){
   }, [publications]);
 
   React.useEffect(() => {
-    console.log(datas);
-    let isLog= localStorage.getItem('isLogged');
-    let hash= localStorage.getItem('hash');
-    if(isLog == null && hash == null){
-      return;
-    }
+    
+    // let isLog= localStorage.getItem('isLogged');
+    // let hash= localStorage.getItem('hash');
+    // if(isLog == null && hash == null){
+    //   return;
+    // }
+    if(publications.length == 0){
 
-    let config = {
-      headers:{
-        "token":hash,
-      }}; 
-    axios.get(BASE_URL+ '/api/datas', config).then(({data})=> {
-       if(data.status){
-        
-        dispatch({ type: "set_data", data:  data});
-
-        setPublications(data.publications);
-        setSelectType(SelectType);
-       }
-    }).catch(e =>{
-        
-        setTimeout( () =>{
-            document.location.reload();
-        } , 2000);
+      let config = {
+        headers:{
+          // "token":hash,
+        }}; 
+      axios.get(BASE_URL+ '/apiu/datas', config).then(({data})=> {
+         if(data.status){
+          
+          dispatch({ type: "set_data", data:  data});
   
-        
-    });
+          setPublications(data.publications);
+          setSelectType(SelectType);
+         }
+      }).catch(e =>{
+          
+          setTimeout( () =>{
+              document.location.reload();
+          } , 2000);
+    
+          
+      });
+    }
 
     
     return () => {
-      
+      // setPublications([]);
+      // resetFilter();
     }
   }, []);
 
@@ -616,7 +619,8 @@ if(relative.id != null){
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Image</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Do follow</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2">
-                          <div className="flex justify-center buyth">Buy</div>
+                          {/* <div className="flex justify-center buyth">Buy</div> */}
+                          <div className="flex justify-center exmple">EXAMPLE</div>
                         </th>
                       </tr>
                     </thead>
@@ -682,9 +686,19 @@ if(relative.id != null){
                         </td> 
                         <td className="text-center border-l border-r">{(data.do_follow)[0].toUpperCase()+(data.do_follow).slice(1)}</td>
                         <td className='text-center border-l border-r'> 
-                        {data.buyUrl != null && data.buyUrl !='' && (<>
-                            <a href={data.buyUrl} target='_blank' className='buyb'> Buy </a>
+                        {data.articlePreview != null && data.articlePreview !='' && (<>
+                            <a id={'global'+data.slug} > View Image </a>
+                            <ReactTooltip anchorSelect={'#global'+data.slug} aria-haspopup='true'  clickable>
+                              <img style={{
+                                "max-height":'300px',
+                                "max-width":'250px', 
+                              }} src={data.articlePreview}/>
+                            </ReactTooltip>
                           </>) }
+
+                        {/* {data.buyUrl != null && data.buyUrl !='' && (<>
+                            <a href={data.buyUrl} target='_blank' className='buyb'> Buy </a>
+                          </>) } */}
                         </td>
 
                       </tr>
