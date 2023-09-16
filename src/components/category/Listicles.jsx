@@ -7,7 +7,8 @@ export const Listicles = () => {
   
   const myContext = React.useContext(AppContext);
   const { datas} = myContext;
-  const [publications, setPublications] = React.useState(datas.datas.publications);
+  const datasx = typeof(datas.datas?.publications) == 'object' ? datas.datas.publications : [];
+  const [publications, setPublications] = React.useState(datasx);
   const [filteredPub, setFilteredPub] = React.useState(publications);
    
 
@@ -50,7 +51,8 @@ export const Listicles = () => {
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Image</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2"><div className="flex justify-center">Do follow</div></th>
                         <th className="font-body font-medium border-l border-r uppercase p-2 px-2">
-                        <div className="flex justify-center buyth">Buy</div>
+                          <div className="flex justify-center exmple">EXAMPLE</div>
+                        {/* <div className="flex justify-center buyth">Buy</div> */}
                         </th>
                       </tr>
                     </thead>
@@ -119,9 +121,19 @@ export const Listicles = () => {
                         
                         <td className="text-center border-l border-r">{(data.do_follow)[0].toUpperCase()+(data.do_follow).slice(1)}</td>
                         <td className='text-center border-l border-r'>
-                        {data.buyUrl != null && data.buyUrl !='' && (<>
-                            <a href={data.buyUrl} target='_blank'  className='buyb'> Buy </a>
+                        {data.articlePreview != null && data.articlePreview !='' && (<>
+                            <a id={'global'+data.slug} > View Image </a>
+                            <ReactTooltip anchorSelect={'#global'+data.slug} aria-haspopup='true'  clickable>
+                              <img style={{
+                                "max-height":'300px',
+                                "max-width":'250px', 
+                              }} src={data.articlePreview}/>
+                            </ReactTooltip>
                           </>) }
+                          
+                          {/* {data.buyUrl != null && data.buyUrl !='' && (<>
+                            <a href={data.buyUrl} target='_blank'  className='buyb'> Buy </a>
+                          </>) } */}
       
                     
                         </td>

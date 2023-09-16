@@ -15,12 +15,12 @@ export const HomeHeader = () => {
           navigate('/')
         }}>
             <img className='w-52 p-3 -ml-2 xl:-ml-6' src={datas.web.logoUrl} alt="logo" />
-            <button className='text-sm font-body text-primary ml-2 uppercase hover:opacity-50 mr-2' onClick={() =>{
+            {/* <button className='text-sm font-body text-primary ml-2 uppercase hover:opacity-50 mr-2' onClick={() =>{
               localStorage.removeItem('isLogged');
               localStorage.removeItem('hash');
               dispatch({ type: "login", login_data: null });
               navigate('/'); 
-            }}>Log out</button>
+            }}>Log out</button> */}
         </div>
     </div>
   )

@@ -5,7 +5,14 @@ const Misc = () => {
 
   
   const myContext = React.useContext(AppContext);
-  const { datas} = myContext;
+  const { datas } = myContext;
+
+  if(typeof(datas.datas?.misc) != 'object' ){
+    return <></>;
+  }
+  
+
+  
   return (
     <>
       <div>

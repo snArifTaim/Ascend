@@ -5,6 +5,10 @@ export const PRBundles = () => {
   
   const myContext = React.useContext(AppContext);
   const { datas, dispatch ,isLogged,checkLogin} = myContext;
+
+  if(typeof(datas.datas?.prbundles) != 'object' ){
+    return <></>;
+  }
   
   return (
     <>
